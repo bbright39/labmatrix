@@ -1,0 +1,318 @@
+
+#include <mpi.h>
+#include <stdio.h>
+#include<stdlib.h>
+#include<conio.h>
+
+int main(int argc, char *argv[]) 
+{
+	int i,j;
+	int rank,nproc;
+	int row_starta,col_starta,row_startb,col_startb;
+	int row_rec,col_rec;
+
+	int rowstart_rec,rowlast_rec;
+	MPI_Init(&argc, &argv);
+	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+	MPI_Comm_size(MPI_COMM_WORLD, &nproc);
+	printf("Hello World from MPI Process %d of %d \n", rank, nproc);
+	
+	//small 123 142 r c
+	//getchar();
+	//if(nproc >= 2)
+	//{
+		/*
+		if(rank == 1)
+		{
+			FILE *fileb;
+			fileb = fopen("matBsmall.txt","r");
+	
+			if(fileb == NULL)
+			{
+				printf("can't read file");
+				exit(1);
+			}	
+			fscanf(fileb,"%d",&row_startb);
+			fscanf(fileb,"%d",&col_startb);
+
+			printf("row_startb = %d\n",row_startb);
+			printf("col_startb = %d\n",col_startb);
+	
+			double** matb=(double **)malloc(row_startb*sizeof(double*));
+			for(i=0;i<row_startb;++i)
+			{
+				matb[i]=(double*)malloc(col_startb*sizeof(double));
+			}
+			
+			for(i=0 ; i<row_startb ; i++)
+			{
+				{
+					for(j = 0 ; j<col_startb ; j++)
+					{
+						if(!fscanf(fileb, "%lf", &matb[i][j]) )
+							break;
+						if((i<5) && (j<5))
+							printf("%lf\n",matb[i][j]);
+					}
+				}
+			}
+			
+			fclose(fileb);
+		}
+		*/
+		//getchar();
+		if(rank == 0)
+		{
+			FILE *filea;
+			filea = fopen("matAsmall.txt","r");
+			if(filea == NULL)
+			{
+				printf("can't read file");
+				exit(1);
+			}	
+			fscanf(filea,"%d",&row_starta);
+			fscanf(filea,"%d",&col_starta);
+			printf("row_starta = %d\n",row_starta);
+			printf("col_starta = %d\n",col_starta);
+			
+			double** mata;
+			mata =(double **)malloc(row_starta*sizeof(double*)); 
+			for(i=0;i<=row_starta;++i)
+			{
+				mata[i]=(double*)malloc(col_starta*sizeof(double));
+			}
+
+			for(i=1 ; i<=row_starta ; i++)// read file
+			{
+				{
+					for(j = 1 ; j<=col_starta ; j++)
+					{
+						if (!fscanf(filea, "%lf", &mata[i][j]) )
+							break;
+					
+					}
+				}
+			}
+			
+	
+			
+			int startrow,startrow2,startrow3,lastrow,lastrow2,count;
+			int nrow = row_starta/nproc;
+			double** matsent;
+			matsent = (double **)malloc(nrow*sizeof(double*)); 
+			for(i=0;i<=nrow;++i)
+			{
+				matsent[i]=(double*)malloc(col_starta*sizeof(double));
+			}
+
+			double** matsentz;
+			matsentz=(double **)malloc(nrow*sizeof(double*)); 
+			for(i=0;i<=nrow;++i)
+			{
+				matsentz[i]=(double*)malloc(col_starta*sizeof(double));
+			}
+			
+			//printf("pass");
+			int all_matrix;
+			for(i=1;i<=nproc-1;i++)
+			{
+				startrow = 1+(nrow)*(i);
+				startrow2 = startrow;
+				lastrow = (nrow)*(i+1);
+				lastrow2 = lastrow;
+				printf("\nstartrow = %d\n",startrow);
+				printf("lastrow = %d\n",lastrow);
+				//printf("pass");
+				MPI_Send(&startrow, 1, MPI_INT,i,0,MPI_COMM_WORLD);
+				MPI_Send(&lastrow, 1, MPI_INT,i,1,MPI_COMM_WORLD);
+				MPI_Send(&col_starta, 1, MPI_INT,i,2,MPI_COMM_WORLD);
+				
+				for(count=1;count<=nrow;startrow2++,count++)
+				{
+					for(j=1; j<=col_starta; j++)
+					{
+						matsent[count][j] = mata[startrow2][j];
+					}
+				}
+				//%
+				/*
+				if(i == nproc-1)// %
+				{
+					printf("row_starta//nproc = %d %d\n",row_starta,nproc);
+					int rowz = row_starta%nproc;
+					if(rowz != 0){
+						printf("rowz = %d\n",rowz);
+						for(count=1; count<=rowz; lastrow2++,count++)
+						{
+							for(j=1; j<=col_starta; j++)
+							{
+								matsentz[count][j] = mata[lastrow2+1][j];
+								if((j<3)&&(count<3))
+								{
+									printf("%lf \n",matsentz[count][j]);
+								}
+							}
+						}
+					}
+					
+				}
+				*/
+
+				//printf("\nfirst = %lf\n",matsent[1][1]);
+				//printf("last = %lf\n",matsent[nrow][col_starta]);
+				//passs
+				
+				/*
+				for(count = 1; count<=nrow ; count++)
+				{
+					for(j = 1; j<=col_starta ; j++)
+					{
+						//if(count>=nrow-2 && j>=col_starta-2)
+						//{
+						//	printf("%lf ",matsent[count][j]);
+						//}
+					}
+				}
+				*/
+
+				printf("\nfirst is : %lf\n",matsent[1][1]);
+				printf("first-last is : %lf\n",matsent[1][col_starta]);
+				printf("last is : %lf \n",matsent[nrow][1]);
+				printf("last-last is : %lf \n",matsent[nrow][col_starta]);
+				all_matrix = nrow * col_starta;
+				
+				MPI_Send(&(matsent[0][0]),all_matrix,MPI_DOUBLE,i,3,MPI_COMM_WORLD);
+				
+			}
+			
+			fclose(filea);
+			/*
+			free(mata[0]);
+			free(mata);
+			free(matsent[0]);
+			free(matsent);
+			free(matsentz[0]);
+			free(matsentz);
+			*/
+		}
+		
+		
+		//if((rank != 0)&& (rank != nproc))
+		if(rank != 0)
+		{
+			int numcol;
+			MPI_Recv(&rowstart_rec,1,MPI_INT,0,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+			MPI_Recv(&rowlast_rec,1,MPI_INT,0,1,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+			MPI_Recv(&numcol,1,MPI_INT,0,2,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+			printf("rev row start = %d ",rowstart_rec);
+			printf("rev row last = %d ",rowlast_rec);
+			printf("rev colc = %d\n",numcol);
+
+			// Rec Matrix
+			printf("before malloc\n");
+			int numrow = rowlast_rec - rowstart_rec + 1; 
+			double** mat_rec;
+			mat_rec	=(double **)malloc(numrow*sizeof(double*)); 
+			for(i=0;i<=numrow;++i)
+			{
+				mat_rec[i]=(double*)malloc(numcol*sizeof(double));
+			}
+			printf("after malloc\n");
+			printf("before rec\n");
+
+			int all_matrix2 = numrow * numcol;
+			printf("numrow * numcol = %d * %d\n",numrow,numcol);
+			printf("all matrix2 = %d\n",all_matrix2);
+
+		   MPI_Recv(&(mat_rec[0][0]),all_matrix2,MPI_DOUBLE,0,3,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+			
+			printf("after rec\n");
+			printf("%lf\n",mat_rec[1][1]);
+			printf("%lf\n",mat_rec[1][2]);
+			/*
+			for(i = 1; i<=numrow ; i++)
+			{
+				for(j = 1; j<=numcol ; j++)
+				{
+					if((i<3) && (j<3))
+					{
+						printf("%lf ",mat_rec[i][j]);
+					}
+				}
+			}
+			*/
+
+
+
+
+			
+			//free(mat_rec[0]);
+			//free(mat_rec);
+			
+		}
+		
+
+
+	
+	//}
+	
+	
+	MPI_Finalize();
+	//getchar();
+	return 0;
+}
+
+
+
+
+		
+	/*
+	int i,j;
+	FILE *filea,*fileb;
+	filea = fopen("matAsmall.txt","r");
+	fileb = fopen("matBsmall.txt","r");
+	
+	if((filea == NULL)||(fileb == NULL))
+	{
+		printf("can't read file");
+		exit(1);
+	}	
+	
+	fscanf(filea,"%d",&row_starta);
+	fscanf(filea,"%d",&col_starta);
+	fscanf(fileb,"%d",&row_startb);
+	fscanf(fileb,"%d",&col_startb);
+
+	printf("row_starta = %d\n",row_starta);
+	printf("col_starta = %d\n",col_starta);
+	printf("row_startb = %d\n",row_startb);
+	printf("col_startb = %d\n",col_startb);
+	
+	double** mata=(double **)malloc(row_starta*sizeof(double*)); 
+	double** matb=(double **)malloc(row_startb*sizeof(double*));
+	for(i=0;i<row_starta;++i)
+	{
+		mata[i]=(double*)malloc(col_starta*sizeof(double));
+		matb[i]=(double*)malloc(col_startb*sizeof(double));
+	}
+
+	for(i=0 ; i<row_starta ; i++)
+	{
+		{
+			for(j = 0 ; j<col_starta ; j++)
+			{
+				if( (!fscanf(filea, "%lf", &mata[i][j]))||(!fscanf(fileb, "%lf", &matb[i][j])) )
+					break;
+				
+				if((i<5) && (j<5))
+					printf("%lf\n",matb[i][j]);
+			}
+		}
+	}
+	//i--,j--;
+	//printf("first is %lf\nlast is %lf\n",matb[0][0],matb[i][j]);
+	
+	fclose(filea);
+	fclose(fileb);
+	
+	*/
